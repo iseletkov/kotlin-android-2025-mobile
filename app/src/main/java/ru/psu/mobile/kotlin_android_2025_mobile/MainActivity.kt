@@ -4,23 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -32,16 +29,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,8 +41,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.flow.StateFlow
+import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_calculator.CPageCalculatorViewModel
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.theme.Kotlinandroid2025mobileTheme
 import kotlin.String
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,10 +67,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CPageCalculator()
 {
+    val vm: CPageCalculatorViewModel = viewModel()
+
+//    val operand1 by vm.operand1.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
 //            TopAppBar(
@@ -92,7 +93,7 @@ fun CPageCalculator()
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Калькулятор",
+                        text = "Калькулятор", //+operand1,
                         fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Serif
@@ -106,20 +107,24 @@ fun CPageCalculator()
         },
 
     ) { innerPadding ->
-        Calculator(modifier = Modifier.padding(innerPadding))
+        Calculator(
+            modifier = Modifier.padding(innerPadding),
+            vm
+        )
     }
 }
 
 @Composable
 fun CCalculatorInputTextField(
     label : String,
-    state : MutableState<String>,
-    roundedShape : RoundedCornerShape
+    state : StateFlow<String>,
+    roundedShape : RoundedCornerShape,
+    onChange : (String) -> Unit
 )
 {
     OutlinedTextField(
-        value = state.value,
-        onValueChange = { newValue -> state.value = newValue },
+        value = state.collectAsState().value, //Вывод на экран изменений состояния одного из операндов
+        onValueChange = { newValue -> onChange(newValue) },
         label = { Text(label) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier
@@ -165,12 +170,15 @@ fun CCalculatorButton(
 
 
 @Composable
-fun Calculator(modifier: Modifier = Modifier) {
-    var operand1 = remember { mutableStateOf("") }
-    var operand2 = remember { mutableStateOf("") }
-    var result by remember { mutableStateOf("") }
+fun Calculator(
+    modifier: Modifier = Modifier,
+    vm: CPageCalculatorViewModel
+) {
 
     val roundedShape = RoundedCornerShape(8.dp)
+
+    val result by vm.result.collectAsStateWithLifecycle()
+    val operand1 by vm.operand1.collectAsStateWithLifecycle()
 
     Box(
         modifier = modifier
@@ -187,14 +195,21 @@ fun Calculator(modifier: Modifier = Modifier) {
         ) {
             CCalculatorInputTextField(
                 "Число 1",
-                operand1,
+                vm.operand1,
                 roundedShape
             )
+            { newValue ->
+                vm.onOperand1Change(newValue)
+            }
+
 //            Spacer(modifier = Modifier.height(8.dp))
             CCalculatorInputTextField(
                 "Число 2",
-                operand2,
-                roundedShape
+                vm.operand2,
+                roundedShape,
+                onChange = { newValue ->
+                    vm.onOperand2Change(newValue)
+                }
             )
 
             Row(
@@ -207,52 +222,29 @@ fun Calculator(modifier: Modifier = Modifier) {
                     roundedShape,
                     Modifier.weight(1f),
                     R.drawable.icon_outline_add_24
-                ) {
-                    result = performOperation(
-                        operand1.value,
-                        operand2.value,
-                        Operation.ADD
-                    )
-                }
+                ) { vm.onButtonPlusPress() }
+
                 // Кнопка сложения
                 CCalculatorButton(
                     "Вычесть",
                     roundedShape,
                     Modifier.weight(1f),
                     R.drawable.icon_outline_minus_24
-                ) {
-                    result = performOperation(
-                        operand1.value,
-                        operand2.value,
-                        Operation.SUBTRACT
-                    )
-                }
+                ) { vm.onButtonMinusPress() }
                 // Кнопка сложения
                 CCalculatorButton(
                     "Умножить",
                     roundedShape,
                     Modifier.weight(1f),
                     R.drawable.icon_outline_multiply_24
-                ) {
-                    result = performOperation(
-                        operand1.value,
-                        operand2.value,
-                        Operation.MULTIPLY
-                    )
-                }
+                ) { vm.onButtonMultiplyPress() }
                 // Кнопка сложения
                 CCalculatorButton(
                     "Поделить",
                     roundedShape,
                     Modifier.weight(1f),
                     R.drawable.icon_division
-                ) {
-                    result = performOperation(
-                        operand1.value,
-                        operand2.value,
-                        Operation.DIVIDE
-                    )
-                }
+                ) { vm.onButtonDividePress() }
             }
 
             Box(
@@ -267,57 +259,30 @@ fun Calculator(modifier: Modifier = Modifier) {
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
+
                 Text(
-                    text = if (result.isNotEmpty()) "Результат: $result" else "Результат",
+                    text = result,
                     fontSize = 18.sp,
-                    color = if (result.isNotEmpty()) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.fillMaxWidth()
                 )
+//                Text(
+//                    text = operand1,
+//                    fontSize = 18.sp,
+//                    color = MaterialTheme.colorScheme.onSurface,
+//                    modifier = Modifier.fillMaxWidth()
+//                )
             }
         }
     }
 
-}
-
-enum class Operation {
-    ADD, SUBTRACT, MULTIPLY, DIVIDE
-}
-
-fun performOperation(
-    operand1: String,
-    operand2: String,
-    operation: Operation
-): String {
-    return try {
-        val num1 = operand1.toDoubleOrNull()
-        val num2 = operand2.toDoubleOrNull()
-
-        if (num1 == null || num2 == null) {
-            "Ошибка: введите числа"
-        } else {
-            when (operation) {
-                Operation.ADD -> (num1 + num2).toString()
-                Operation.SUBTRACT -> (num1 - num2).toString()
-                Operation.MULTIPLY -> (num1 * num2).toString()
-                Operation.DIVIDE -> {
-                    if (num2 == 0.0) {
-                        "Ошибка: деление на 0"
-                    } else {
-                        (num1 / num2).toString()
-                    }
-                }
-            }
-        }
-    } catch (e: Exception) {
-        "Ошибка вычисления"
-    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun CalculatorPreview1() {
+    val vm: CPageCalculatorViewModel = viewModel()
     Kotlinandroid2025mobileTheme {
-        Calculator()
+        Calculator(vm = vm)
     }
 }
