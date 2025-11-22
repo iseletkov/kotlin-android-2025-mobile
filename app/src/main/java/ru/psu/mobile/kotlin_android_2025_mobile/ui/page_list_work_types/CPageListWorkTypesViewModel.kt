@@ -1,74 +1,89 @@
 package ru.psu.mobile.kotlin_android_2025_mobile.ui.page_list_work_types
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import ru.psu.mobile.kotlin_android_2025_mobile.model.CWorkType
+import ru.psu.mobile.kotlin_android_2025_mobile.repositories.CRepositoryWorkTypes
 
 
 // ViewModel для управления списком сметных норм
-class CPageListWorkTypesViewModel : ViewModel() {
-    private val _workTypes = MutableStateFlow(
+class CPageListWorkTypesViewModel(
+    private val repository: CRepositoryWorkTypes
+) : ViewModel() {
+    private val _workTypes = MutableStateFlow<Pair<List<CWorkType>, String>>(
         Pair(
-            listOf(
-                CWorkType(
-                    name = "Устройство фундаментов железобетонных",
-                    code = "01-01-001-01"
-                ),
-                CWorkType(
-                    name = "Кладка стен кирпичных",
-                    code = "02-01-015-04"
-                ),
-                CWorkType(
-                    name = "Устройство кровли из металлочерепицы",
-                    code = "03-01-042-02"
-                ),
-                CWorkType(
-                    name = "Штукатурка стен цементным раствором",
-                    code = "04-01-008-01"
-                ),
-                CWorkType(
-                    name = "Устройство стяжки пола",
-                    code = "05-01-023-03"
-                )
-            ),
-            "Created"
+            emptyList(),
+            "Loading"
         )
     )
     val workTypes: StateFlow<Pair<List<CWorkType>, String>> = _workTypes.asStateFlow()
 
+    init {
+        loadWorkTypes()
+        //initializeDefaultData()
+    }
+    private fun loadWorkTypes() {
+        viewModelScope.launch {
+            repository.getAll().collect { workTypesList ->
+                _workTypes.value = Pair(workTypesList, "Loaded")
+            }
+
+
+        }
+    }
+
+    private fun initializeDefaultData() {
+        viewModelScope.launch {
+            val currentWorkTypes = repository.getAll()
+            if (_workTypes.value.first.isEmpty()) {
+                repository.insertWorkType(CWorkType(
+                        name = "Устройство фундаментов железобетонных",
+                        code = "01-01-001-01"
+                    )
+                )
+                repository.insertWorkType(CWorkType(
+                        name = "Кладка стен кирпичных",
+                        code = "02-01-015-04"
+                    )
+                )
+            }
+        }
+    }
 
     fun addWorkType() {
-        _workTypes.update { currentWorkTypesInfo ->
-            val newNumber = currentWorkTypesInfo.first.size + 1
-            Pair(
-                currentWorkTypesInfo.first + CWorkType(
-                    name = "Новая сметная норма $newNumber",
-                    code = "XX-XX-XXX-$newNumber"
-                ),
-                "Item added"
+        viewModelScope.launch {
+            val newNumber = _workTypes.value.first.size + 1
+            val newWorkType = CWorkType(
+                name = "Новая сметная норма $newNumber",
+                code = "XX-XX-XXX-$newNumber"
             )
+            repository.insertWorkType(newWorkType)
+//            _workTypes.update { current ->
+//                Pair(current.first, "Item added")
+//            }
         }
 
     }
     fun deleteWorkType(workType: CWorkType) {
-        _workTypes.update { currentWorkTypesInfo ->
-            Pair(
-                currentWorkTypesInfo.first.filter { it.guid != workType.guid },
-                "Item deleted"
-            )
+        viewModelScope.launch {
+            repository.deleteWorkType(workType)
+//            _workTypes.update { current ->
+//                Pair(current.first, "Item deleted")
+//            }
         }
     }
 
 
     fun clearWorkTypes() {
-        _workTypes.update {
-            Pair(
-                emptyList(),
-                "Created"
-            )
+        viewModelScope.launch {
+            repository.clearAllWorkTypes()
+//            _workTypes.update { current ->
+//                Pair(emptyList(), "Cleared")
+//            }
         }
     }
 }

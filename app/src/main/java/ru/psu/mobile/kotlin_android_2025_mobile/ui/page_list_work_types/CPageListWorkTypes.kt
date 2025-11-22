@@ -36,12 +36,21 @@ import android.content.res.Configuration
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import ru.psu.mobile.kotlin_android_2025_mobile.CApplication
+import ru.psu.mobile.kotlin_android_2025_mobile.repositories.CRepositoryWorkTypes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CPageListWorkTypes()
 {
-    val vm: CPageListWorkTypesViewModel = viewModel()
+    val context = LocalContext.current
+    val application = context.applicationContext as CApplication
+    val repository = application.repositoryWorkTypes
+
+    val vm: CPageListWorkTypesViewModel = viewModel(
+        factory = CViewModelFactoryWorkTypes(repository)
+    )
     val workTypesInfo by vm.workTypes.collectAsState()
     val lazyListState = rememberLazyListState()
 
