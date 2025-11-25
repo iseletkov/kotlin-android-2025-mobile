@@ -37,12 +37,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 import ru.psu.mobile.kotlin_android_2025_mobile.CApplication
 import ru.psu.mobile.kotlin_android_2025_mobile.repositories.CRepositoryWorkTypes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CPageListWorkTypes()
+fun CPageListWorkTypes(
+    navController: NavController
+)
 {
     val context = LocalContext.current
     val application = context.applicationContext as CApplication
@@ -95,7 +98,9 @@ fun CPageListWorkTypes()
                 items(workTypesInfo.first) { workType ->
                     CWorkTypeListItem(
                         workType = workType,
-                        vm
+                        vm,
+                        navController
+
 //                        onDelete = { vm.deleteWorkType(workType) }
                     )
                 }
@@ -108,6 +113,7 @@ fun CPageListWorkTypes()
 fun CWorkTypeListItem(
     workType: CWorkType,
     vm: CPageListWorkTypesViewModel,
+    navController: NavController
 //    onDelete: () -> Unit
 ) {
     val configuration = LocalConfiguration.current
@@ -118,7 +124,8 @@ fun CWorkTypeListItem(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        onClick = { navController.navigate("WorkTypeDetail/${workType.guid}")}
     ) {
         if (isLandscape) {
             // Горизонтальная ориентация: код, наименование, единицы измерения, кнопка удаления
@@ -127,7 +134,8 @@ fun CWorkTypeListItem(
                     .fillMaxWidth()
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+               // onClick = {}
             ) {
                 // Код
                 Text(

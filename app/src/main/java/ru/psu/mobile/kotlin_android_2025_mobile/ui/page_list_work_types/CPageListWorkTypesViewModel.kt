@@ -24,14 +24,13 @@ class CPageListWorkTypesViewModel(
 
     init {
         loadWorkTypes()
-        //initializeDefaultData()
+//        initializeDefaultData()
     }
     private fun loadWorkTypes() {
         viewModelScope.launch {
             repository.getAll().collect { workTypesList ->
                 _workTypes.value = Pair(workTypesList, "Loaded")
             }
-
 
         }
     }
@@ -41,6 +40,7 @@ class CPageListWorkTypesViewModel(
             val currentWorkTypes = repository.getAll()
             if (_workTypes.value.first.isEmpty()) {
                 repository.insertWorkType(CWorkType(
+                        guid = "0da44a66-1478-42bd-b157-149bcfa264d7",
                         name = "Устройство фундаментов железобетонных",
                         code = "01-01-001-01"
                     )

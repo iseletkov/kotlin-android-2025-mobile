@@ -16,12 +16,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_calculator.CPageCalculator
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.theme.Kotlinandroid2025mobileTheme
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_list_work_types.CPageListWorkTypes
+import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_work_type_detail.CPageWorkTypeDetail
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,7 +95,17 @@ fun CMainNavigation() {
                 CPageCalculator()
             }
             composable("WorkTypes") {
-                CPageListWorkTypes()
+                CPageListWorkTypes(navController = navController)
+            }
+            composable(
+                "WorkTypeDetail/{workTypeGuid}",
+                arguments = listOf(navArgument("workTypeGuid") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val workTypeGuid = backStackEntry.arguments?.getString("workTypeGuid") ?: ""
+                CPageWorkTypeDetail(
+                    workTypeGuid = workTypeGuid,
+                    navController = navController
+                )
             }
         }
     }
