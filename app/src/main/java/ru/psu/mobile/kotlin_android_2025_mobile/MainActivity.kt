@@ -25,7 +25,7 @@ import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_calculator.CPageCalculat
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.theme.Kotlinandroid2025mobileTheme
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_list_work_types.CPageListWorkTypes
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_work_type_detail.CPageWorkTypeDetail
-
+import ru.psu.mobile.kotlin_android_2025_mobile.R
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

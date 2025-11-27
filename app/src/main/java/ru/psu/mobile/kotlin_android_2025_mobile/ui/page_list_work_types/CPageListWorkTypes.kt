@@ -34,6 +34,7 @@ import ru.psu.mobile.kotlin_android_2025_mobile.model.CWorkType
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
@@ -56,6 +57,7 @@ fun CPageListWorkTypes(
     )
     val workTypesInfo by vm.workTypes.collectAsState()
     val lazyListState = rememberLazyListState()
+    val isLoading by vm.isLoading.collectAsState()
 
     // Автоматическая прокрутка только при добавлении новых элементов
     LaunchedEffect(workTypesInfo) {
@@ -79,30 +81,46 @@ fun CPageListWorkTypes(
             }
         }
     ) { paddingValues ->
-        if (workTypesInfo.first.isEmpty()) {
+        if (isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Список сметных норм пуст")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Text("Загрузка данных...", modifier = Modifier.padding(top = 16.dp))
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                state = lazyListState
-            ) {
-                items(workTypesInfo.first) { workType ->
-                    CWorkTypeListItem(
-                        workType = workType,
-                        vm,
-                        navController
+        } else
+        {
 
-//                        onDelete = { vm.deleteWorkType(workType) }
-                    )
+            if (workTypesInfo.first.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Список сметных норм пуст")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    state = lazyListState
+                ) {
+                    items(workTypesInfo.first) { workType ->
+                        CWorkTypeListItem(
+                            workType = workType,
+                            vm,
+                            navController
+
+                            //                        onDelete = { vm.deleteWorkType(workType) }
+                        )
+                    }
                 }
             }
         }

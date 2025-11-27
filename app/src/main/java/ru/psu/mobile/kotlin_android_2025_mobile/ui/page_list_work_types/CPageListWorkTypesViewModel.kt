@@ -2,6 +2,7 @@ package ru.psu.mobile.kotlin_android_2025_mobile.ui.page_list_work_types
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,16 +23,36 @@ class CPageListWorkTypesViewModel(
     )
     val workTypes: StateFlow<Pair<List<CWorkType>, String>> = _workTypes.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     init {
-        loadWorkTypes()
+        subscribeToWorkTypeChanges()
+        loadFromApi()
+
 //        initializeDefaultData()
     }
-    private fun loadWorkTypes() {
+    private fun subscribeToWorkTypeChanges() {
         viewModelScope.launch {
             repository.getAll().collect { workTypesList ->
                 _workTypes.value = Pair(workTypesList, "Loaded")
             }
 
+        }
+    }
+    fun loadFromApi() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.loadWorkTypesFromApi()
+            //delay(2000L)
+            _isLoading.value = false
+
+            if (success) {
+                // Данные автоматически обновятся через Flow
+            } else {
+                // Обработка ошибки
+                _workTypes.value = Pair(_workTypes.value.first, "Error loading from API")
+            }
         }
     }
 

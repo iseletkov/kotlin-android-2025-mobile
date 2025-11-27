@@ -1,0 +1,45 @@
+package ru.psu.mobile.kotlin_android_2025_mobile.api.dto
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class CDTOWorkType (
+    val id: Int,
+    val sourceEntityType: Int,
+    val normLegalDocPublishedType: Int,
+    val publishDate: String?,
+    val archiveDate: String?,
+    val ordinalNumber: Int?,
+    val name: String,
+    val state: Int,
+    val date: String,
+    val startDate: String?,
+    val number: String?,
+    val documentTypeName: String?,
+    val approvingOrganizationName: String?,
+    val normLegalDocBaseKind: Int?,
+    val filePath: String?,
+    val fileSize: Int?,
+    val fileCache: Boolean,
+    val guid: String,
+    val parentGuid: String?,
+    val treePath: String,
+    val isLeaf: Boolean,
+    val level: Int,
+    val registrationNumber: String?,
+    val signatoryOrganizationName: String,
+    val endActionDate: String?,
+    val edition: String,
+    val normLegalDocPublishedGuid: String,
+    val code: String,
+    val hasCatalog: Boolean,
+    val normCatalogWorkTableJson: String?,
+    val normTableJson: String?,
+    val normTableValueTableJson: String?,
+    val fullPublishedText: String?,
+    val signDate: String?,
+    val version: String,
+    val approveInfo: String,
+    val registrationInfo: String,
+    val note: String?
+)
