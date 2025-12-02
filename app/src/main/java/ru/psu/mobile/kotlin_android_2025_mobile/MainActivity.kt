@@ -26,6 +26,7 @@ import ru.psu.mobile.kotlin_android_2025_mobile.ui.theme.Kotlinandroid2025mobile
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_list_work_types.CPageListWorkTypes
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_work_type_detail.CPageWorkTypeDetail
 import ru.psu.mobile.kotlin_android_2025_mobile.R
+import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_map.CPageCoordinates
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_map.CPageMap
 
 class MainActivity : ComponentActivity() {
@@ -41,7 +42,8 @@ class MainActivity : ComponentActivity() {
 //                    CMainNavigation()
 //                    CPageCalculator()
 //                    CPageListWorkTypes()
-                    CPageMap()
+//                    CPageMap()
+                    CPageCoordinates()
                 }
             }
         }

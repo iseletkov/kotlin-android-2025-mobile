@@ -118,6 +118,7 @@ fun CPageMap() {
                         setIcon(imageProvider, iconStyle)
                         userData = item // Сохраняем данные
                     }
+                    placemark.geometry = Poi
                     placemark.addTapListener { mapObject, _->
                         val tappedItem = mapObject.userData as? Triple<String, Double, Double>
                         tappedItem?.let {
