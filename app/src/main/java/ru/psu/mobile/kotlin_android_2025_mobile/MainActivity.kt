@@ -42,8 +42,8 @@ class MainActivity : ComponentActivity() {
 //                    CMainNavigation()
 //                    CPageCalculator()
 //                    CPageListWorkTypes()
-//                    CPageMap()
-                    CPageCoordinates()
+                    CPageMap()
+//                    CPageCoordinates()
                 }
             }
         }
