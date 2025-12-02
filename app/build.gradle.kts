@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -14,12 +16,15 @@ android {
 
     defaultConfig {
         applicationId = "ru.psu.mobile.kotlin_android_2025_mobile"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "MAPKIT_API_KEY", "\"${getMapkitApiKey()}\"")
+        resValue("string", "mapkit_api_key", getMapkitApiKey())
     }
 
     buildTypes {
@@ -40,10 +45,14 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
+    //карта
+    implementation("com.yandex.android:maps.mobile:4.26.0-lite")
+
     //Для запроса REST API
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
@@ -74,4 +83,17 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// Функция для безопасного чтения ключа из local.properties
+fun getMapkitApiKey(): String {
+    val properties = Properties()
+    val localPropertiesFile = project.rootProject.file("local.properties")
+
+    return if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { properties.load(it) }
+        properties.getProperty("MAPKIT_API_KEY", "").trim()
+    } else {
+        "" // Или можно выбросить исключение: error("local.properties not found")
+    }
 }

@@ -26,6 +26,8 @@ import ru.psu.mobile.kotlin_android_2025_mobile.ui.theme.Kotlinandroid2025mobile
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_list_work_types.CPageListWorkTypes
 import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_work_type_detail.CPageWorkTypeDetail
 import ru.psu.mobile.kotlin_android_2025_mobile.R
+import ru.psu.mobile.kotlin_android_2025_mobile.ui.page_map.CPageMap
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,9 +38,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CMainNavigation()
+//                    CMainNavigation()
 //                    CPageCalculator()
 //                    CPageListWorkTypes()
+                    CPageMap()
                 }
             }
         }

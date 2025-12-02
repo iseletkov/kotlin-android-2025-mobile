@@ -2,6 +2,7 @@ package ru.psu.mobile.kotlin_android_2025_mobile
 
 import android.app.Application
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.yandex.mapkit.MapKitFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
@@ -28,8 +29,10 @@ class CApplication : Application() {
         )
     }
 
-//    override fun onCreate() {
-//        super.onCreate()
-//
-//    }
+    override fun onCreate() {
+        super.onCreate()
+        MapKitFactory.setApiKey(BuildConfig.MAPKIT_API_KEY) // Замените на свой ключ
+        MapKitFactory.initialize(this)
+
+    }
 }
