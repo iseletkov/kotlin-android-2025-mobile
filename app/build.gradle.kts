@@ -51,11 +51,11 @@ android {
 
 dependencies {
     //координаты
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation(libs.play.services.location)
     // Для запроса разрешений в Compose
-    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+    implementation(libs.accompanist.permissions)
     //карта
-    implementation("com.yandex.android:maps.mobile:4.26.0-lite")
+    implementation(libs.maps.mobile)
 
     //Для запроса REST API
     implementation(libs.retrofit)

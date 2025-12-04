@@ -1,5 +1,6 @@
 package ru.psu.mobile.kotlin_android_2025_mobile.ui.page_map
 
+import android.Manifest
 import android.graphics.PointF
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
@@ -17,36 +18,26 @@ import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.IconStyle
 import com.yandex.runtime.image.ImageProvider
 import ru.psu.mobile.kotlin_android_2025_mobile.R
-import com.yandex.mapkit.map.Map
-import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.Build
 import android.os.Looper
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.res.imageResource
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.android.gms.location.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.yandex.mapkit.mapview.MapView
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.yandex.mapkit.map.MapObjectTapListener
 import com.yandex.mapkit.map.PlacemarkMapObject
 
 @Composable
@@ -63,20 +54,6 @@ fun CMapComponent(
             onMapViewCreated(this)
         }
     }
-
-    // Эффект для обновления положения камеры при изменении currentLocation
-//    LaunchedEffect(currentLocation) {
-//        if (currentLocation != null) {
-//            mapView.mapWindow.map.move(
-//                CameraPosition(
-//                    currentLocation, // Новые координаты
-//                    15.0f, // Уровень приближения
-//                    0.0f,  // Азимут
-//                    0.0f   // Наклон
-//                )
-//            )
-//        }
-//    }
 
     // 2. Запуск карты при подключении компонента к UI
     LaunchedEffect(Unit) {
@@ -99,11 +76,38 @@ fun CMapComponent(
     )
 }
 
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CPageMap() {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val onPlaceTaplistener = MapObjectTapListener { MapObject, _ ->
+        if (MapObject is PlacemarkMapObject) {
+            val data = MapObject.userData as Triple<*,*,*>
+            Toast.makeText(
+                context,
+                "Нажат: ${data.first}",
+                Toast.LENGTH_SHORT
+            ).show()
+            true
+        }
+        else
+            false
+    }
+
+    // Данные для меток
+    val places = rememberSaveable {
+        listOf(
+            Triple("Дом бобра", 57.991462, 56.164647),
+            Triple("Парк Балатово", 57.992151, 56.177641),
+            Triple("Театр Театр", 58.008195, 56.215949)
+        )
+    }
+    //Загрузка изображения для маркера метки
+    val imageBitmapPlace = ImageBitmap.imageResource(R.drawable.map_marker)
+    val imageProviderPlace = ImageProvider.fromBitmap(imageBitmapPlace.asAndroidBitmap())
 
     // Состояние для хранения текущего местоположения
     var currentLocation by remember { mutableStateOf<Point?>(null) }
@@ -123,7 +127,6 @@ fun CPageMap() {
     val fusedLocationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
     }
-
     // Callback для обновлений местоположения
     val locationCallback = remember {
         object : LocationCallback() {
@@ -140,7 +143,7 @@ fun CPageMap() {
                         mapView = mapView,
                         point = point,
                         accuracy = location.accuracy,
-                        userPlacemarkRef = { userPlacemark },
+                        userPlacemark = userPlacemark,
                         onPlacemarkUpdated = { newPlacemark ->
                             userPlacemark = newPlacemark
                         }
@@ -174,7 +177,7 @@ fun CPageMap() {
                 .build()
         } else {
             LocationRequest.Builder(10000)
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .setMinUpdateIntervalMillis(5000)
                 .setMaxUpdateDelayMillis(15000)
                 .setMinUpdateDistanceMeters(10f)
@@ -201,7 +204,7 @@ fun CPageMap() {
                         mapView = mapView,
                         point = point,
                         accuracy = it.accuracy,
-                        userPlacemarkRef = { userPlacemark },
+                        userPlacemark = userPlacemark,
                         onPlacemarkUpdated = { newPlacemark ->
                             userPlacemark = newPlacemark
                         }
@@ -223,25 +226,13 @@ fun CPageMap() {
         }
     }
 
-    // Данные для меток
-    val places = rememberSaveable {
-        listOf(
-            Triple("Дом бобра", 57.991462, 56.164647),
-            Triple("Парк Балатово", 57.992151, 56.177641),
-            Triple("Театр Театр", 58.008195, 56.215949)
-        )
-    }
-
+    //Внешний вид страницы
     Box(modifier = Modifier.fillMaxSize()) {
         CMapComponent(
             modifier = Modifier.fillMaxSize(),
-            currentLocation = currentLocation,
             onMapViewCreated = { mapViewInstance ->
-                mapView = mapViewInstance
                 val map = mapViewInstance.mapWindow.map
-
-                // Устанавливаем начальную позицию камеры
-                val initialPoint = currentLocation ?: Point(57.991239, 56.164615)
+                val initialPoint = Point(57.991239, 56.164615)
                 map.move(
                     CameraPosition(
                         initialPoint,
@@ -254,94 +245,25 @@ fun CPageMap() {
                 // Настраиваем стиль для иконок
                 val iconStyle = IconStyle().apply {
                     anchor = PointF(0.5f, 1.0f)
-                    scale = 2.0f
-                    zIndex = 10f
+                    scale = 0.5f //Здесь надо коэффицент изменения масштаба поставить
+                    //zIndex = 10f
                 }
 
                 // Добавляем статические метки
                 places.forEach { place ->
-                    val pointData = place
-                    val imageProvider = ImageProvider.fromResource(context, R.drawable.ic_map_marker)
+                    //val imageProvider = ImageProvider.fromResource(context, R.drawable.ic_map_marker)
                     val placemark = map.mapObjects.addPlacemark().apply {
-                        setText(pointData.first)
-                        geometry = Point(pointData.second, pointData.third)
-                        setIcon(imageProvider, iconStyle)
+                        setText(place.first)
+                        geometry = Point(place.second, place.third)
+                        setIcon(imageProviderPlace, iconStyle)
                         userData = place
                     }
 
-                    placemark.addTapListener { mapObject, _ ->
-                        val tappedItem = mapObject.userData as? Triple<String, Double, Double>
-                        tappedItem?.let {
-                            Toast.makeText(
-                                context,
-                                "Нажат: ${it.first}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        true
-                    }
+                    placemark.addTapListener (onPlaceTaplistener)
                 }
 
-                // Если уже есть текущее местоположение, добавляем метку
-                currentLocation?.let { point ->
-                    updateUserLocationOnMap(
-                        mapView = mapViewInstance,
-                        point = point,
-                        accuracy = locationAccuracy,
-                        userPlacemarkRef = { userPlacemark },
-                        onPlacemarkUpdated = { newPlacemark ->
-                            userPlacemark = newPlacemark
-                        }
-                    )
-                }
             }
         )
-        startLocationTracking()
-
-//        // Кнопка для включения/выключения отслеживания
-//        FloatingActionButton(
-//            onClick = {
-//                if (isTracking) {
-//                    stopLocationTracking()
-//                    Toast.makeText(context, "Отслеживание остановлено", Toast.LENGTH_SHORT).show()
-//                } else {
-//                    if (locationPermissionState.status.isGranted) {
-//                        startLocationTracking()
-//                        Toast.makeText(context, "Отслеживание запущено", Toast.LENGTH_SHORT).show()
-//                    } else {
-//                        locationPermissionState.launchPermissionRequest()
-//                    }
-//                }
-//            },
-//            modifier = Modifier
-//                .padding(16.dp)
-//                .align(Alignment.BottomEnd),
-//            backgroundColor = if (isTracking) Color.Red
-//            else Color.Blue,
-//        ) {
-//            Icon(
-//                painter = painterResource(R.drawable.icon_outline_add_24),
-//                contentDescription = if (isTracking) "Остановить отслеживание" else "Начать отслеживание",
-//                tint = Color.White
-//            )
-//        }
-
-        // Индикатор статуса отслеживания
-        if (isTracking) {
-            Card(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.TopEnd),
-//                backgroundColor = Color.Green.copy(alpha = 0.8f)
-            ) {
-                Text(
-                    text = "Отслеживание активно",
-                    modifier = Modifier.padding(8.dp),
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
-            }
-        }
     }
 }
 
@@ -350,19 +272,19 @@ private fun updateUserLocationOnMap(
     mapView: MapView?,
     point: Point,
     accuracy: Float?,
-    userPlacemarkRef: () -> PlacemarkMapObject?,
+    userPlacemark: PlacemarkMapObject?,
     onPlacemarkUpdated: (PlacemarkMapObject?) -> Unit
 ) {
     mapView?.let { view ->
         val map = view.mapWindow.map
 
         // Создаем или обновляем метку пользователя
-        val currentPlacemark = userPlacemarkRef()
+        val currentPlacemark = userPlacemark
 
         if (currentPlacemark == null) {
             // Создаем новую метку для пользователя
             val context = view.context
-            val userIcon = ImageProvider.fromResource(context, R.drawable.ic_map_marker)
+            val userIcon = ImageProvider.fromResource(context, R.drawable.outline_location_on_24)
 
             val newPlacemark = map.mapObjects.addPlacemark().apply {
                 geometry = point
@@ -389,7 +311,7 @@ private fun updateUserLocationOnMap(
 //                    it < 30 -> R.drawable.ic_user_location_medium_accuracy
 //                    else -> R.drawable.ic_user_location_low_accuracy
 //                }
-                val iconResource = R.drawable.ic_map_marker
+                val iconResource = R.drawable.map_marker
                 // Если у вас есть разные иконки для разной точности
                 try {
                     val userIcon = ImageProvider.fromResource(context, iconResource)
